@@ -53,6 +53,7 @@ jobs:
         DOCKER_BUILD_ARGS: "--push --platform linux/amd64,linux/arm64"
         DOCKER_BUILDER: "docker buildx build"
         DOCKER_REGISTRY: "ghcr.io" # prod for releases, local for dev
+        DOCKER_REPO: "entee28/kagent" # fork: push under my own GHCR namespace
       run: |
         # if workflow_dispatch is used, use the version input
         if [ -n "${{ github.event.inputs.version }}" ]; then
@@ -80,6 +81,8 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: 'Build Helm Chart'
+      env:
+        HELM_REPO: "oci://ghcr.io/entee28" # fork: push chart under my own GHCR namespace
       run: |
         # if workflow_dispatch is used, use the version input
         if [ -n "${{ github.event.inputs.version }}" ]; then
