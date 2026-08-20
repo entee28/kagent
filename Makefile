@@ -277,10 +277,20 @@ controller-manifests: ## Regenerate CRD manifests and copy them into the Helm ch
 	cp go/api/config/crd/bases/* helm/kagent-crds/templates/
 
 .PHONY: build-controller
-build-controller: ## Build and push the API v2 controller image
+build-controller: ## Build and push the controller image
 build-controller: buildx-create
+	# fork note: upstream points this at core/cmd/controller-v2/main.go, the
+	# "minimal API v2 controller runtime" (#2442) — it only registers
+	# Session/Task/AgentInstance/A2A gRPC services (grpcserver.Config in
+	# cmd/controller-v2/main.go), leaving AgentService/ModelService/ToolService/
+	# PromptTemplateService/FeedbackService/MemoryService nil, so the existing
+	# UI's calls to AgentService 404 with "unknown service
+	# kagent.api.v1alpha1.AgentService". core/cmd/controller/main.go (v1, via
+	# pkg/app/app.go) registers all of them and still pulls in the same
+	# pkg/sandboxbackend/substrate ActorTemplate env-var fix. Building v1 here
+	# until v2 is a complete replacement.
 	$(DOCKER_BUILDER) $(DOCKER_BUILD_ARGS) $(TOOLS_IMAGE_BUILD_ARGS) \
-		--build-arg BUILD_PACKAGE=core/cmd/controller-v2/main.go \
+		--build-arg BUILD_PACKAGE=core/cmd/controller/main.go \
 		-t $(CONTROLLER_IMG) -f go/Dockerfile ./go
 	$(DOCKER_PUSH) $(CONTROLLER_IMG)
 
